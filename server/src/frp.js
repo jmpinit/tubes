@@ -19,7 +19,7 @@ class Node {
 class Input extends Stream {
     uuid: string;
     output: Object;
-    value: Object;
+    value: any;
 
     constructor(value: Object) {
         super();
@@ -34,10 +34,10 @@ class Input extends Stream {
 }
 
 class Lift extends Node {
-    inputs: Array<Object>;
+    inputs: Array<any>;
     fn: Function;
 
-    constructor(inputStreams: Array<Object>, fn: Function) {
+    constructor(inputStreams: Array<any>, fn: Function) {
         super();
 
         this.inputs = inputStreams.map(s => ({ changed: false, stream: s }));
@@ -66,7 +66,24 @@ class Lift extends Node {
 }
 
 class FoldP extends Node {
+    input: Object;
+    fn: Function;
 
+    constructor(input: Object, initial: any, fn: Function) {
+        super();
+
+        this.input = input;
+        this.fn = fn;
+
+        let past = initial;
+
+        this.input.on('message', () => {
+            const v = this.input.take();
+            const newValue = this.fn(past, v);
+            past = newValue;
+            this.output.submit(newValue);
+        });
+    }
 }
 
 class Let extends Node {
