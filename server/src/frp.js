@@ -1,61 +1,50 @@
-import EventEmitter from 'events';
+// @flow
 
-class UUIDGen {
-    counter: number;
-
-    constructor() {
-        this.counter = 0;
-    }
-
-    next() {
-        const uuid = this.counter;
-        this.counter += 1;
-        return uuid;
-    }
-}
+import UUIDGen from './uuid';
+import Stream from './stream';
 
 const uuid = new UUIDGen();
 
 class Node {
-    uuid: String;
+    uuid: string;
+    output: Object;
 
     constructor() {
         this.uuid = uuid.next();
+        this.output = new Stream();
     }
 }
 
-class Stream extends EventEmitter {
-    queue: Array<Object>;
+// TODO multiple inheritance: Node & Stream
+class Input extends Stream {
+    uuid: string;
+    output: Object;
+    value: Object;
 
-    constructor() {
+    constructor(value: Object) {
         super();
-        this.queue = [];
-    }
 
-    submit(v: Object) {
-        this.queue.push(v);
-    }
+        this.value = value;
 
-    take() {
-        return this.queue.shift();
-    }
-}
+        this.uuid = uuid.next();
+        this.output = new Stream();
 
-class Input extends Node {
-    inputStream: Object;
-    outputStream: Object;
-
-    constructor(input: Object, output: Object, value: Object) {
-        super();
-        this.inputStream = input;
-        this.outputStream = output;
-
-        // this.inputStream.on('message', msg => );
+        this.on('message', () => this.output.submit(this.take()));
     }
 }
 
 class Lift extends Node {
+    input: Object;
+    fn: Function;
 
+    constructor(input: Object, fn: Function) {
+        super();
+
+        this.input = input;
+        this.fn = fn;
+
+        this.input.on('message', v => this.output.submit(this.fn(v)));
+    }
 }
 
 class FoldP extends Node {
