@@ -1,0 +1,38 @@
+{
+  "name": "tubes",
+  "version": "1.0.0",
+  "description": "An FRP system for art inspired by Elm.",
+  "main": "index.js",
+  "author": "Owen Trueblood",
+  "license": "MIT",
+  "scripts": {
+    "test": "node_modules/jest/bin/jest.js",
+    "build": "make",
+    "watch": "node node_modules/webpack/bin/webpack.js --watch"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.14.0",
+    "babel-eslint": "^6.1.2",
+    "babel-jest": "^15.0.0",
+    "babel-loader": "^6.2.5",
+    "babel-plugin-transform-flow-strip-types": "^6.14.0",
+    "babel-plugin-typecheck": "^3.9.0",
+    "babel-polyfill": "^6.13.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-es2015-node4": "^2.1.0",
+    "babel-preset-react": "^6.11.1",
+    "eslint": "^3.5.0",
+    "eslint-config-airbnb": "^11.1.0",
+    "eslint-plugin-flowtype": "^2.18.1",
+    "eslint-plugin-import": "^1.15.0",
+    "eslint-plugin-jsx-a11y": "^2.2.2",
+    "eslint-plugin-react": "^6.2.2",
+    "flow-bin": "^0.32.0",
+    "jest": "^15.1.1",
+    "webpack": "^1.13.2",
+    "webpack-node-externals": "^1.4.3"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
