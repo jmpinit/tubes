@@ -119,4 +119,4 @@ class Async extends Node {
 
 }
 
-export { Stream, Input, Lift, FoldP, Let, Var, Async };
+export { Stream, Input, Lift, FoldP, Let, Async };
