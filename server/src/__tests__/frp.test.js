@@ -19,7 +19,7 @@ test('Lift applies a function to values in a stream', () => {
 
     // TODO eventually enforce the type of v
     // it needs to be a number
-    const liftSquare = new frp.Lift(input.output, v => v * v);
+    const liftSquare = new frp.Lift([input.output], v => v * v);
 
     const values = [1, 2, 3];
 

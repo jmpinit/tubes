@@ -34,16 +34,34 @@ class Input extends Stream {
 }
 
 class Lift extends Node {
-    input: Object;
+    inputs: Array<Object>;
     fn: Function;
 
-    constructor(input: Object, fn: Function) {
+    constructor(inputStreams: Array<Object>, fn: Function) {
         super();
 
-        this.input = input;
+        this.inputs = inputStreams.map(s => ({ changed: false, stream: s }));
         this.fn = fn;
 
-        this.input.on('message', v => this.output.submit(this.fn(v)));
+        const maybeEmit = () => {
+            const unchanged = this.inputs.filter(input => !input.changed);
+
+            // don't emit unless all inputs have changed
+            if (unchanged.length > 0) {
+                return;
+            }
+
+            const values = this.inputs.map(input => input.stream.take());
+            const newOutput = this.fn.apply({}, values);
+            this.output.submit(newOutput);
+        };
+
+        // listen to our inputs
+        this.inputs.forEach(input => input.stream.on('message', () => {
+            // eslint-disable-next-line no-param-reassign
+            input.changed = true;
+            maybeEmit();
+        }));
     }
 }
 
