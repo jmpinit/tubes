@@ -7,18 +7,22 @@ const uuid = new UUIDGen();
 
 class Node {
     uuid: string;
-    output: Object;
+    output: Function;
 
     constructor() {
         this.uuid = uuid.next();
-        this.output = new Stream();
+
+        // hidden so users of output can be tracked
+        // (mostly for the benefit of Let)
+        const output = new Stream();
+        this.output = () => output;
     }
 }
 
 // TODO multiple inheritance: Node & Stream
 class Input extends Stream {
     uuid: string;
-    output: Object;
+    output: Function;
     value: any;
 
     constructor(value: Object) {
@@ -27,9 +31,10 @@ class Input extends Stream {
         this.value = value;
 
         this.uuid = uuid.next();
-        this.output = new Stream();
+        const output = new Stream();
+        this.output = () => output;
 
-        this.on('message', () => this.output.submit(this.take()));
+        this.on('message', () => output.submit(this.take()));
     }
 }
 
@@ -53,7 +58,7 @@ class Lift extends Node {
 
             const values = this.inputs.map(input => input.stream.take());
             const newOutput = this.fn.apply({}, values);
-            this.output.submit(newOutput);
+            this.output().submit(newOutput);
         };
 
         // listen to our inputs
@@ -81,17 +86,33 @@ class FoldP extends Node {
             const v = this.input.take();
             const newValue = this.fn(past, v);
             past = newValue;
-            this.output.submit(newValue);
+            this.output().submit(newValue);
         });
     }
 }
 
 class Let extends Node {
+    input: Object;
 
-}
+    constructor(input: Object) {
+        super();
 
-class Var extends Node {
+        this.input = input;
+        const outputs = [];
 
+        // emulate a multichannel
+        // giving everyone who asks a separate stream
+        this.output = () => {
+            const newOutput = new Stream();
+            outputs.push(newOutput);
+            return newOutput;
+        };
+
+        this.input.on('message', () => {
+            const v = this.input.take();
+            outputs.forEach(output => output.submit(v));
+        });
+    }
 }
 
 class Async extends Node {
