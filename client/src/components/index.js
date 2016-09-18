@@ -96,6 +96,7 @@ class Node extends Component {
                 event.stopPropagation();
                 return;
             default:
+                event.stopPropagation();
                 return;
         }
     }
