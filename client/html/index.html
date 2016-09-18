@@ -11,7 +11,7 @@
         padding: 0;
     }
 
-    line {
+    path {
         stroke: black;
         stroke-width: 3px;
     }
@@ -20,6 +20,32 @@
         stroke: black;
         stroke-width: 3px;
         fill: white;
+    }
+
+    @keyframes appear {
+        0% { opacity: 0; }
+        10% { opacity: 0; }
+        15% { opacity: 1; }
+        100% { opacity: 1; }
+    } 
+
+    @keyframes select {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
+    .toolbar rect {
+        stroke: black;
+        stroke-width: 2px;
+    }
+
+    .selected {
+        stroke-width: 5px;
+    }
+
+    .node {
+        animation: appear 2s ease 1;
     }
 
     .input-node {

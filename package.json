@@ -36,6 +36,8 @@
     "testEnvironment": "node"
   },
   "dependencies": {
+    "babel-plugin-transform-object-rest-spread": "^6.8.0",
+    "redux": "^3.6.0",
     "virtual-dom": "^2.1.1"
   }
 }
