@@ -6,7 +6,7 @@ function nodes(state = [], action) {
         case 'ADD_NODE': {
             return [...state, {
                 name: 'a-node',
-                shape: 'box3d',
+                shape: action.nodeType,
                 id: uid(),
                 x: action.x || 0,
                 y: action.y || 0,
@@ -35,15 +35,28 @@ function edges(state = [], action) {
     }
 }
 
-function app(state = { width: 100, height: 100, tool: 'node', selected: [], nodes: [], edges: [] }, action) {
+function app(state = { width: 100, height: 100, tool: 'node', nodeType: 'input', selected: [], nodes: [], edges: [] }, action) {
     switch (action.type) {
         case 'SWITCH_TOOL': {
             return { ...state, tool: action.tool };
+        }
+        case 'SWITCH_NODE_TYPE': {
+            return { ...state, nodeType: action.nodeType };
         }
         case 'SELECT': {
             return {
                 ...state,
                 selected: [...state.selected, action.id],
+            };
+        }
+        case 'DELETE': {
+            // remove any selections that are going to be deleted
+
+            return {
+                ...state,
+                selected: state.selected.filter(id => id !== action.id),
+                nodes: nodes(state.nodes, action),
+                edges: edges(state.edges, action),
             };
         }
         case 'CONNECT': {

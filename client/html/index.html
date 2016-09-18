@@ -35,9 +35,38 @@
         100% { opacity: 1; }
     }
 
+    #input .bg {
+        fill: red;
+    }
+
+    #function .bg {
+        fill: green;
+    }
+
+    #output .bg {
+        fill: blue;
+    }
+
     .toolbar rect {
+        fill: white;
         stroke: black;
         stroke-width: 2px;
+    }
+
+    .toolbar .selected {
+        fill: gray;
+    }
+
+    .toolbar .dropdown rect {
+        fill: white;
+    }
+
+    .toolbar .dropdown .selected rect {
+        fill: #aaa;
+    }
+
+    .toolbar .dropdown text {
+        fill: black;
     }
 
     .selector {

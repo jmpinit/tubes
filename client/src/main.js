@@ -70,15 +70,39 @@ function onkeypress(event) {
             event.stopPropagation();
             return;
         }
-        case 'e': {
+        case 'c': {
             store.dispatch({ type: 'SWITCH_TOOL', tool: 'connect' });
             event.stopPropagation();
             return;
         }
         case 'd': {
-            store.dispatch({ type: 'SWITCH_TOOL', tool: 'delete' });
+            const selected = store.getState().selected;
+
+            if (selected.length > 0) {
+                // delete all selected
+                selected.forEach(id => store.dispatch({ type: 'DELETE', id }));
+            } else {
+                store.dispatch({ type: 'SWITCH_TOOL', tool: 'delete' });
+            }
             event.stopPropagation();
             return;
+        }
+        // node tool
+        // TODO manage tool state separately
+        case 'i':
+        case 'f':
+        case 'o': {
+            const active = store.getState().tool === 'node';
+
+            if (active) {
+                const nodeType = ({
+                    i: 'input',
+                    f: 'function',
+                    o: 'output',
+                })[event.key];
+
+                store.dispatch({ type: 'SWITCH_NODE_TYPE', nodeType });
+            }
         }
         default: {
             return;

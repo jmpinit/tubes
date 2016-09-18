@@ -3,6 +3,8 @@
 import hsvg from '../hsvg';
 import handlers from '../event-handlers';
 
+// TODO use "app" everywhere "state" is used
+
 class Component {
     store: Object;
 
@@ -38,8 +40,8 @@ class VectorCanvas extends Component {
                 const nameCode = 65 + app.nodes.length;
                 const name = String.fromCharCode(nameCode);
 
-                console.log('adding node', name, x, y);
-                this.store.dispatch({ type: 'ADD_NODE', name, x, y });
+                this.store.dispatch({ type: 'ADD_NODE', name, x, y, nodeType: app.nodeType });
+
                 return;
             }
             default:
@@ -169,7 +171,7 @@ class ToolBar extends Component {
         this.currentTool = opts.tool;
         this.tools = opts.tools || [];//['select', 'node', 'edge', 'delete'];
 
-        this.size = 32;
+        this.size = 48;
         this.offset = { x: 10, y: 10 };
     }
 
@@ -180,47 +182,123 @@ class ToolBar extends Component {
         };
     }
 
-    render() {
-        return hsvg('g', {
-            attributes: { class: 'toolbar' },
-        },
-        this.tools.map((tool, i) => (
-            hsvg('g', {
-                onclick: this.handleClick(tool).bind(this),
+    renderNodeDropdown() {
+        const nodeTypes = ['input', 'function', 'output'];
+
+        const entries = nodeTypes.map((type, i) => {
+            const state = this.store.getState();
+            const selected = state.nodeType === type;
+            const y = this.size / 2 * i;
+
+            return hsvg('g', {
+                attributes: {
+                    class: 'dropdown',
+                    transform: `translate(0,${y})`,
+                    class: selected ? 'selected' : '',
+                }
             }, [
                 hsvg('rect', {
                     attributes: {
-                        x: this.offset.x + (this.size * i),
-                        y: this.offset.y,
                         width: this.size,
-                        height: this.size,
-                        rx: this.size / 4,
-                        ry: this.size / 4,
-                        fill: tool === this.currentTool ? 'gray' : 'white',
-                    },
+                        height: this.size / 2,
+                        rx: 2,
+                        ry: 2,
+                    }
                 }),
                 hsvg('text', {
                     attributes: {
-                        x: this.offset.x + (this.size * i) + (this.size / 2),
-                        y: this.offset.y + (this.size / 2),
+                        transform: `translate(${(this.size / 2)},${(this.size / 4)})`,
                         'font-family': 'sans-serif',
                         'font-size': 10,
                         'text-anchor': 'middle',
                         'alignment-baseline': 'central',
-                    },
-                }, tool),
+                    }
+                }, type),
             ])
-        )));
+        });
+
+        return hsvg('g', {
+            attributes: {
+                class: 'dropdown',
+                transform: `translate(0,${this.size})`,
+            }
+        }, entries); 
+    }
+
+    render() {
+        return hsvg('g', {
+            attributes: {
+                class: 'toolbar',
+                transform: `translate(${this.offset.x},${this.offset.y})`,
+            },
+        },
+        this.tools.map((tool, i) => {
+            const selected = this.currentTool === tool;
+            const left = this.size * i;
+            const top = 0;
+
+            const dropdowns = [];
+
+            if (this.currentTool === tool && tool === 'node') {
+                dropdowns.push(this.renderNodeDropdown());
+            }
+
+            return hsvg('g', {
+                onclick: this.handleClick(tool).bind(this),
+                attributes: {
+                    transform: `translate(${left},${top})`,
+                },
+            }, [
+                hsvg('rect', {
+                    attributes: {
+                        x: 0,
+                        y: 0,
+                        width: this.size,
+                        height: this.size,
+                        rx: selected ? 2 : this.size / 4,
+                        ry: selected ? 2 : this.size / 4,
+                        class: selected ? 'selected' : '',
+                    },
+                }),
+                hsvg('text', {
+                    attributes: {
+                        transform: `translate(${(this.size / 2)},${(this.size / 2)})`,
+                        'font-family': 'sans-serif',
+                        'font-size': 10,
+                        'text-anchor': 'middle',
+                        'alignment-baseline': 'central',
+                    }
+                }, tool),
+                ...dropdowns,
+            ])
+        }));
     }
 }
 
 class Defs extends Component {
     render() {
         return hsvg('defs', {}, [
-            hsvg('g', { attributes: { id: 'box3d' } }, [
+            hsvg('g', { attributes: { id: 'input' } }, [
                 hsvg('path', {
                     attributes: {
-                        style: 'fill: white; stroke: none',
+                        class: 'bg',
+                        style: 'stroke: none',
+                        d: 'M-10,5 A5,2.5,0,0,0,10,5 L0,-7.5 L-10,5 z',
+                    },
+                }),
+                hsvg('path', {
+                    attributes: {
+                        class: 'outline',
+                        style: 'fill: none; stroke-linejoin: round',
+                        d: 'M-10,5 A5,2.5,0,0,0,10,5 L0,-10 L-10,5 z',
+                    },
+                }),
+            ]),
+            hsvg('g', { attributes: { id: 'function' } }, [
+                hsvg('path', {
+                    attributes: {
+                        class: 'bg',
+                        style: 'stroke: none',
                         d: 'M-10,-2.5 L0,-12.5 L10,-2.5 L10,7.5 L0,17.5 L-10,7.5, L-10,-2.5 z',
                     },
                 }),
@@ -229,6 +307,22 @@ class Defs extends Component {
                         class: 'outline',
                         style: 'fill: none; stroke-linejoin: round',
                         d: 'M-10,-2.5 L0,-12.5 L10,-2.5 L0,7.5 L-10,-2.5 L-10,7.5 L0,17.5 L10,7.5, L10,-2.5 M0,7.5 L0,17.5',
+                    },
+                }),
+            ]),
+            hsvg('g', { attributes: { id: 'output' } }, [
+                hsvg('path', {
+                    attributes: {
+                        class: 'bg',
+                        style: 'stroke: none',
+                        d: 'M10,-7.5 A5,2.5,0,0,0,-10,-7.5 M10,-7.5 L0,7.5 L-10,-7.5',
+                    },
+                }),
+                hsvg('path', {
+                    attributes: {
+                        class: 'outline',
+                        style: 'fill: none; stroke-linecap: round; stroke-linejoin: round',
+                        d: 'M10,-7.5 A5,2.5,0,0,0,-10,-7.5 A5,2.5,0,0,0,10,-7.5 M10,-6.5 L0,7.5 L-10,-6.5',
                     },
                 }),
             ]),
