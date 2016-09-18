@@ -133,22 +133,27 @@ document.onkeypress = (event) => {
     switch (event.key) {
         case ' ': {
             store.dispatch({ type: 'SELECT_NONE' });
+            event.stopPropagation();
             return;
         }
         case 's': {
             store.dispatch({ type: 'SWITCH_TOOL', tool: 'select' });
+            event.stopPropagation();
             return;
         }
         case 'n': {
             store.dispatch({ type: 'SWITCH_TOOL', tool: 'node' });
+            event.stopPropagation();
             return;
         }
         case 'e': {
             store.dispatch({ type: 'SWITCH_TOOL', tool: 'edge' });
+            event.stopPropagation();
             return;
         }
         case 'd': {
             store.dispatch({ type: 'SWITCH_TOOL', tool: 'delete' });
+            event.stopPropagation();
             return;
         }
         default: {
@@ -186,7 +191,15 @@ function clickNode(id) {
 function Node({ selected }, { name, x, y, id }) {
     const isSelected = (selected.indexOf(id) !== -1);
 
-    return h('circle', {
+    return h('use', {
+        namespace,
+        onclick: clickNode(id),
+        attributes: {
+            transform: `translate(${x},${y})`,
+            href: '#box3d',
+        },
+    });
+    /*h('circle', {
         namespace,
         onclick: clickNode(id),
         attributes: {
@@ -195,7 +208,7 @@ function Node({ selected }, { name, x, y, id }) {
             transform: `translate(${x},${y})`,
             r: 10,
         },
-    });
+    });*/
 }
 
 function Edge(nodes, { name, start: startId, end: endId }) {
@@ -220,6 +233,23 @@ function Edge(nodes, { name, start: startId, end: endId }) {
 
 function Defs() {
     return h('defs', { namespace }, [
+        h('g', { namespace, attributes: { id: 'box3d' } }, [
+            h('path', {
+                namespace,
+                attributes: {
+                    style: 'fill: white; stroke: none',
+                    d: 'M-10,-2.5 L0,-12.5 L10,-2.5 L10,7.5 L0,17.5 L-10,7.5, L-10,-2.5 z',
+                },
+            }),
+            h('path', {
+                namespace,
+                attributes: {
+                    class: 'outline',
+                    style: 'fill: none; stroke-linejoin: round',
+                    d: 'M-10,-2.5 L0,-12.5 L10,-2.5 L0,7.5 L-10,-2.5 L-10,7.5 L0,17.5 L10,7.5, L10,-2.5 M0,7.5 L0,17.5',
+                },
+            }),
+        ]),
         h('marker', {
             namespace,
             attributes: {
@@ -327,7 +357,7 @@ function render({ app, nodes, connections }) {
             width: app.width,
             height: app.height,
         },
-    }, [Defs(), toolBarElement, nodeElements, edgeElements]);
+    }, [Defs(), toolBarElement, edgeElements, nodeElements]);
 
     return h('div', {}, [svg]);
 }
