@@ -1,7 +1,9 @@
 // @flow
 
+import h from 'virtual-dom/h';
 import hsvg from '../hsvg';
 import handlers from '../event-handlers';
+import ace from 'brace';
 
 // TODO use "app" everywhere "state" is used
 
@@ -13,6 +15,36 @@ class Component {
     }
 
     // abstract render()
+}
+
+class Editor extends Component {
+    x: number;
+    y: number;
+
+    constructor(store: Object, opts: Object) {
+        super(store);
+
+        this.id = opts.id;
+        this.x = opts.x || 0;
+        this.y = opts.y || 0;
+    }
+
+    render() {
+        const app = this.store.getState();
+        const code = app.sourceCode;
+
+        // FIXME ugh... this isn't the right way
+        setTimeout(() => {
+            document.editor = ace.edit('editor');
+            document.editor.setValue(code[this.id]);
+            document.editor.focus();
+        }, 100);
+
+        return h('div', {
+            id: 'editor',
+            style: `position: absolute; left: ${this.x}px; top: ${this.y}px; width: 600px; height: 200px;`,
+        });
+    }
 }
 
 class VectorCanvas extends Component {
@@ -31,12 +63,12 @@ class VectorCanvas extends Component {
     handleClick(event: Object) {
         const app = this.store.getState();
 
+        const box = event.target.getBoundingClientRect();
+        const x = event.pageX - box.left;
+        const y = event.pageY - box.top;
+
         switch (app.tool) {
             case 'node': {
-                const box = event.target.getBoundingClientRect();
-                const x = event.pageX - box.left;
-                const y = event.pageY - box.top;
-
                 const nameCode = 65 + app.nodes.length;
                 const name = String.fromCharCode(nameCode);
 
@@ -97,6 +129,10 @@ class Node extends Component {
                 this.store.dispatch({ type: 'CONNECT', id: this.id });
                 event.stopPropagation();
                 return;
+            case 'code': {
+                this.store.dispatch({ type: 'OPEN_EDITOR', id: this.id, x: this.x, y: this.y });
+                return;
+            }
             default:
                 event.stopPropagation();
                 return;
@@ -348,4 +384,4 @@ class Defs extends Component {
     }
 }
 
-export { VectorCanvas, Node, Edge, ToolBar, Defs };
+export { VectorCanvas, Editor, Node, Edge, ToolBar, Defs };

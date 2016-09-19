@@ -35,7 +35,7 @@ function edges(state = [], action) {
     }
 }
 
-function app(state = { width: 100, height: 100, tool: 'node', nodeType: 'input', selected: [], nodes: [], edges: [] }, action) {
+function app(state = { width: 100, height: 100, tool: 'node', nodeType: 'input', selected: [], nodes: [], edges: [], sourceCode: {} }, action) {
     switch (action.type) {
         case 'SWITCH_TOOL': {
             return { ...state, tool: action.tool };
@@ -82,6 +82,28 @@ function app(state = { width: 100, height: 100, tool: 'node', nodeType: 'input',
                 start: undefined,
                 edges: [...state.edges, newEdge],
             };
+        }
+        case 'OPEN_EDITOR': {
+            const { id, x, y } = action;
+
+            if (!(id in state.sourceCode)) {
+                return {
+                    ...state,
+                    editor: { id, x, y },
+                    sourceCode: { ...state.sourceCode, [action.id]: '' },
+                };
+            } else {
+                return { ...state, editor: { id, x, y } };
+            }
+        }
+        case 'CLOSE_EDITOR': {
+            return { ...state,
+                sourceCode: {
+                    ...state.sourceCode,
+                    [state.editor.id]: action.code,
+                },
+                editor: undefined,
+            }
         }
         case 'SELECT_NONE': {
             return {

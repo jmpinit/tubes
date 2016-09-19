@@ -7,14 +7,16 @@ import createElement from 'virtual-dom/create-element';
 import { createStore } from 'redux';
 
 import reducer from './reducers';
-import { VectorCanvas, Node, Edge, ToolBar, Defs } from './components';
+import { VectorCanvas, Editor, Node, Edge, ToolBar, Defs } from './components';
 import hsvg from './hsvg';
 
 const store = createStore(reducer);
 
 function render(app) {
+    const children = [];
+
     const toolBarElement = new ToolBar(store, {
-        tools: ['select', 'node', 'connect', 'delete'],
+        tools: ['select', 'node', 'connect', 'code', 'delete'],
         tool: app.tool,
     });
     const nodeElements = app.nodes.map(node => new Node(store, node)).map(n => n.render());
@@ -26,7 +28,13 @@ function render(app) {
         height: app.height,
     });
 
-    return h('div', {}, [svg.render()]);
+    children.push(svg.render());
+
+    if (app.editor) {
+        children.push((new Editor(store, app.editor)).render());
+    }
+
+    return h('div', {}, children);
 }
 
 let tree = h('div');
@@ -39,6 +47,11 @@ store.subscribe(() => {
     rootNode = patch(rootNode, patches);
     tree = newTree;
 });
+
+// makes a blob of JSON describing the current graph
+function serialize() {
+    return store.getState();
+}
 
 // TOP-LEVEL EVENT HANDLERS
 
@@ -53,8 +66,25 @@ function resize() {
 window.onresize = resize();
 resize();
 
+document.onkeyup = function(event) {
+    if (event.key === 'Escape') {
+        const code = document.editor.getValue();
+        store.dispatch({ type: 'CLOSE_EDITOR', code });
+        event.stopPropagation();
+    }
+}
+
 function onkeypress(event) {
+    if (event.target.className === 'ace_text-input') {
+        // FIXME directly prevent ace from propagating events
+        // (or remove ace entirely - is text editing necessary here?)
+        return;
+    }
+
     switch (event.key) {
+        case 'z': {
+            console.log(serialize());
+        }
         case ' ': {
             store.dispatch({ type: 'SELECT_NONE' });
             event.stopPropagation();
@@ -72,6 +102,11 @@ function onkeypress(event) {
         }
         case 'c': {
             store.dispatch({ type: 'SWITCH_TOOL', tool: 'connect' });
+            event.stopPropagation();
+            return;
+        }
+        case 'e': {
+            store.dispatch({ type: 'SWITCH_TOOL', tool: 'code' });
             event.stopPropagation();
             return;
         }
