@@ -10,6 +10,25 @@ import reducer from './reducers';
 import { VectorCanvas, Editor, Node, Edge, ToolBar, Defs } from './components';
 import hsvg from './hsvg';
 
+// TODO needs better management
+const socket = new WebSocket('ws://localhost:1337');
+
+let connected = false;
+socket.onmessage = ({ data: message }) => {
+    try {
+        const action = JSON.parse(message.toString());
+        store.dispatch(action);
+        console.log(action);
+    } catch(e) {
+        console.error(e);
+    }
+
+    if (!connected) {
+        console.log('connected!');
+        connected = true;
+    }
+}
+
 const store = createStore(reducer);
 
 function render(app) {
@@ -50,7 +69,22 @@ store.subscribe(() => {
 
 // makes a blob of JSON describing the current graph
 function serialize() {
-    return store.getState();
+    const app = store.getState();
+
+    const stripEdge = ({ id, start, end }) => ({
+        id,
+        start: stripNode(start),
+        end: stripNode(end),
+    });
+
+    const stripNode = ({ name, id, shape }) => ({ name, id, shape });
+
+    const graphData = {
+        edges: app.edges.map(e => stripEdge(e)),
+        sourceCode: app.sourceCode,
+    };
+
+    socket.send(JSON.stringify(graphData));
 }
 
 // TOP-LEVEL EVENT HANDLERS
