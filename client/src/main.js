@@ -17,8 +17,11 @@ let connected = false;
 socket.onmessage = ({ data: message }) => {
     try {
         const action = JSON.parse(message.toString());
-        store.dispatch(action);
-        console.log(action);
+
+        if (action.type) {
+            store.dispatch(action);
+            console.log(action);
+        }
     } catch(e) {
         console.error(e);
     }
